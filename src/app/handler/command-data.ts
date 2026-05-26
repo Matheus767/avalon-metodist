@@ -1,13 +1,11 @@
-import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
-
-import type { CommandData } from './Command.ts';
+import type { CommandData, CommandJsonData } from './Command.ts';
 
 export function createCommandData(
-	command: RESTPostAPIApplicationCommandsJSONBody,
+	command: CommandJsonData,
 ): CommandData {
 	return {
 		name: command.name,
-		toJSON(): RESTPostAPIApplicationCommandsJSONBody {
+		toJSON(): CommandJsonData {
 			return command;
 		},
 	};

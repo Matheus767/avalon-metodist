@@ -5,8 +5,9 @@ import { Client, Collection, Events, GatewayIntentBits, MessageFlags } from 'dis
 import { token } from '../config.ts';
 import type { Command } from './app/handler/Command.ts';
 import type { CommandDependencies } from './app/port/CommandDependencies.ts';
+import { createCommandRegistry } from './infra/bootstrap/command-registry.ts';
+import { DiscordJsInteractionContext } from './infra/discord/adapters/DiscordJsInteractionContext.ts';
 import { DiscordGateway } from './infra/discord/discord.ts';
-import { loadCommandsFromDirectory } from './infra/bootstrap/command-loader.ts';
 import { InviteTargetConfigJsonRepository } from './infra/repository/InviteTargetConfigJsonRepository.ts';
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -18,14 +19,9 @@ const dependencies: CommandDependencies = {
 	),
 };
 
-async function loadCommands(commandDependencies: CommandDependencies): Promise<void> {
-	const utilityPath = path.join(process.cwd(), 'src', 'app', 'use-case', 'utility');
-	const loadedCommands = await loadCommandsFromDirectory(
-		utilityPath,
-		commandDependencies,
-	);
-
-	for (const { command } of loadedCommands) {
+function loadCommands(commandDependencies: CommandDependencies): void {
+	const registry = createCommandRegistry(commandDependencies);
+	for (const command of registry.values()) {
 		commands.set(command.data.name, command);
 	}
 }
@@ -45,7 +41,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
 	}
 
 	try {
-		await command.execute(interaction);
+		const context = new DiscordJsInteractionContext(interaction);
+		await command.execute(context);
 	} catch (error) {
 		console.error(error);
 		if (interaction.replied || interaction.deferred) {
@@ -62,9 +59,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
 	}
 });
 
-loadCommands(dependencies)
-	.then(() => client.login(token))
-	.catch((err) => {
-		console.error(err);
+try {
+	loadCommands(dependencies);
+	void client.login(token).catch((error) => {
+		console.error(error);
 		process.exitCode = 1;
 	});
+} catch (error) {
+	console.error(error);
+	process.exitCode = 1;
+}

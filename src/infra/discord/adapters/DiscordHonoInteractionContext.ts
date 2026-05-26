@@ -1,10 +1,26 @@
-import type { APIApplicationCommandInteractionDataOption } from 'discord-api-types/v10';
-import type { CommandContext } from 'discord-hono';
-
 import type {
 	InteractionContextPort,
 	InteractionReplyOptions,
 } from '../../../app/port/interaction/InteractionContextPort.ts';
+import type { DiscordInteractionOption } from '../types/DiscordInteraction.ts';
+
+type CommandContextLike<E extends { Bindings?: object } = { Bindings?: object }> = {
+	interaction: {
+		guild_id?: string;
+		member?: {
+			permissions?: string;
+			user?: { id: string; username: string };
+		};
+		user?: { id: string; username: string };
+		data: {
+			options?: DiscordInteractionOption[];
+		};
+	};
+	flags(flag: 'EPHEMERAL'): {
+		res(content: string): Response;
+	};
+	res(content: string): Response;
+} & E;
 
 const ADMINISTRATOR_PERMISSION = 0x8n;
 
@@ -12,7 +28,7 @@ export class DiscordHonoInteractionContext<E extends { Bindings?: object } = { B
 implements InteractionContextPort {
 	private response: Response | null = null;
 
-	constructor(private readonly context: CommandContext<E>) {}
+	constructor(private readonly context: CommandContextLike<E>) {}
 
 	getGuildId(): string | null {
 		return this.context.interaction.guild_id ?? null;
@@ -24,7 +40,6 @@ implements InteractionContextPort {
 
 	hasAdministratorPermission(): boolean {
 		const rawPermissions = this.context.interaction.member?.permissions;
-		console.log(rawPermissions);
 
 		if (!rawPermissions) {
 			return false;
@@ -74,15 +89,15 @@ implements InteractionContextPort {
 	}
 
 	private findOptionByName(
-		options: APIApplicationCommandInteractionDataOption[],
+		options: DiscordInteractionOption[],
 		name: string,
-	): APIApplicationCommandInteractionDataOption | null {
+	): DiscordInteractionOption | null {
 		for (const option of options) {
 			if (option.name === name) {
 				return option;
 			}
 
-			if ('options' in option && option.options) {
+			if (option.options) {
 				const nested = this.findOptionByName(option.options, name);
 
 				if (nested) {

@@ -1,37 +1,29 @@
-import {
-	ChatInputCommandInteraction,
-	MessageFlags,
-	PermissionsBitField,
-} from 'discord.js';
+import type { InteractionContextPort } from '../../port/interaction/InteractionContextPort.ts';
 
 export async function ensureGuildInteraction(
-	interaction: ChatInputCommandInteraction,
+	interaction: InteractionContextPort,
 ): Promise<boolean> {
-	if (interaction.inGuild()) {
+	if (interaction.isInGuild()) {
 		return true;
 	}
 
 	await interaction.reply({
 		content: 'Este comando só pode ser usado dentro de um servidor.',
-		flags: MessageFlags.Ephemeral,
+		ephemeral: true,
 	});
 	return false;
 }
 
 export async function ensureAdminPermission(
-	interaction: ChatInputCommandInteraction,
+	interaction: InteractionContextPort,
 ): Promise<boolean> {
-	const hasAdmin = interaction.memberPermissions?.has(
-		PermissionsBitField.Flags.Administrator,
-	);
-
-	if (hasAdmin) {
+	if (interaction.hasAdministratorPermission()) {
 		return true;
 	}
 
 	await interaction.reply({
 		content: 'Apenas administradores do servidor podem usar este comando.',
-		flags: MessageFlags.Ephemeral,
+		ephemeral: true,
 	});
 	return false;
 }

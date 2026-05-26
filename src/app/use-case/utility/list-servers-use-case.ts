@@ -1,10 +1,6 @@
-<<<<<<< Updated upstream
-import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js';
-
-=======
 import { createCommandData } from '../../handler/command-data.ts';
->>>>>>> Stashed changes
 import type { CommandDependencies } from '../../port/CommandDependencies.ts';
+import type { InteractionContextPort } from '../../port/interaction/InteractionContextPort.ts';
 import { ensureAdminPermission, ensureGuildInteraction } from '../shared/command-guards.ts';
 
 export default class ListServersUseCase {
@@ -16,7 +12,7 @@ export default class ListServersUseCase {
 
 	constructor(private readonly dependencies: CommandDependencies) {}
 
-	async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+	async execute(interaction: InteractionContextPort): Promise<void> {
 		if (!(await ensureGuildInteraction(interaction))) {
 			return;
 		}
@@ -36,7 +32,7 @@ export default class ListServersUseCase {
 
 		await interaction.reply({
 			content,
-			flags: MessageFlags.Ephemeral,
+			ephemeral: true,
 		});
 	}
 }

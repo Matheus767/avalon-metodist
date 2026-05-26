@@ -1,10 +1,6 @@
-<<<<<<< Updated upstream
-import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js';
-
-=======
 import { createCommandData } from '../../handler/command-data.ts';
->>>>>>> Stashed changes
 import type { CommandDependencies } from '../../port/CommandDependencies.ts';
+import type { InteractionContextPort } from '../../port/interaction/InteractionContextPort.ts';
 import { ensureAdminPermission, ensureGuildInteraction } from '../shared/command-guards.ts';
 
 export default class ConfigUseCase {
@@ -25,7 +21,7 @@ export default class ConfigUseCase {
 
 	constructor(private readonly dependencies: CommandDependencies) {}
 
-	async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+	async execute(interaction: InteractionContextPort): Promise<void> {
 		if (!(await ensureGuildInteraction(interaction))) {
 			return;
 		}
@@ -33,24 +29,32 @@ export default class ConfigUseCase {
 			return;
 		}
 
-		const selectedIndex = interaction.options.getInteger('index', true);
+		const selectedIndex = interaction.getIntegerOption('index');
+
+		if (!selectedIndex || selectedIndex < 1) {
+			await interaction.reply({
+				content: 'Índice inválido. Informe um número maior ou igual a 1.',
+				ephemeral: true,
+			});
+			return;
+		}
 		const botGuilds = await this.dependencies.discordGateway.listBotGuilds();
 
 		if (selectedIndex > botGuilds.length) {
 			await interaction.reply({
 				content: `Índice inválido. Execute /listServers e use um índice entre 1 e ${botGuilds.length}.`,
-				flags: MessageFlags.Ephemeral,
+				ephemeral: true,
 			});
 			return;
 		}
 
 		const targetGuild = botGuilds[selectedIndex - 1];
-		const originGuildId = interaction.guildId;
+		const originGuildId = interaction.getGuildId();
 
 		if (!originGuildId) {
 			await interaction.reply({
 				content: 'Não foi possível identificar o servidor de origem.',
-				flags: MessageFlags.Ephemeral,
+				ephemeral: true,
 			});
 			return;
 		}
@@ -62,7 +66,7 @@ export default class ConfigUseCase {
 
 		await interaction.reply({
 			content: `Configuração salva. O /invite agora gera convite para: ${targetGuild.name}.`,
-			flags: MessageFlags.Ephemeral,
+			ephemeral: true,
 		});
 	}
 }

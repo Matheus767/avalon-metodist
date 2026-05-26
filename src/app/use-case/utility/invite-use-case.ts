@@ -1,10 +1,6 @@
-<<<<<<< Updated upstream
-import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js';
-
-=======
 import { createCommandData } from '../../handler/command-data.ts';
->>>>>>> Stashed changes
 import type { CommandDependencies } from '../../port/CommandDependencies.ts';
+import type { InteractionContextPort } from '../../port/interaction/InteractionContextPort.ts';
 import { ensureGuildInteraction } from '../shared/command-guards.ts';
 
 export default class InviteUseCase {
@@ -16,17 +12,17 @@ export default class InviteUseCase {
 
 	constructor(private readonly dependencies: CommandDependencies) {}
 
-	async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+	async execute(interaction: InteractionContextPort): Promise<void> {
 		if (!(await ensureGuildInteraction(interaction))) {
 			return;
 		}
 
-		const originGuildId = interaction.guildId;
+		const originGuildId = interaction.getGuildId();
 
 		if (!originGuildId) {
 			await interaction.reply({
 				content: 'Não foi possível identificar o servidor de origem.',
-				flags: MessageFlags.Ephemeral,
+				ephemeral: true,
 			});
 			return;
 		}
@@ -38,14 +34,14 @@ export default class InviteUseCase {
 		if (!targetGuildId) {
 			await interaction.reply({
 				content: 'Nenhum servidor alvo configurado. Use /listServers e depois /config index:<numero>.',
-				flags: MessageFlags.Ephemeral,
+				ephemeral: true,
 			});
 			return;
 		}
 
 		const invite = await this.dependencies.discordGateway.createInviteForGuild(targetGuildId);
-		await interaction.reply(
-			`Convite gerado para ${invite.guildName} (${invite.channelName}): ${invite.url}`,
-		);
+		await interaction.reply({
+			content: `Convite gerado para ${invite.guildName} (${invite.channelName}): ${invite.url}`,
+		});
 	}
 }
