@@ -2,8 +2,8 @@ import {
 	ChannelType,
 	Client,
 	Guild,
-	GuildBasedChannel,
 	PermissionsBitField,
+	TextChannel,
 } from 'discord.js';
 
 import type {
@@ -52,11 +52,11 @@ export class DiscordGateway implements DiscordGatewayPort {
 		};
 	}
 
-	private async resolveInviteChannel(guild: Guild) {
+	private async resolveInviteChannel(guild: Guild): Promise<TextChannel> {
 		await guild.channels.fetch();
 		const me = guild.members.me ?? (await guild.members.fetchMe());
 		const channels = guild.channels.cache
-			.filter((channel) => this.isInviteCompatibleChannel(channel))
+			.filter((channel): channel is TextChannel => this.isInviteCompatibleChannel(channel))
 			.sort((left, right) => left.position - right.position);
 		const systemChannel = guild.systemChannel;
 
@@ -79,7 +79,7 @@ export class DiscordGateway implements DiscordGatewayPort {
 		return firstEligibleChannel;
 	}
 
-	private canCreateInvite(channel: GuildBasedChannel, botUserId: string): boolean {
+	private canCreateInvite(channel: TextChannel, botUserId: string): boolean {
 		const permissions = channel.permissionsFor(botUserId);
 
 		if (!permissions) {
@@ -90,7 +90,13 @@ export class DiscordGateway implements DiscordGatewayPort {
 			permissions.has(PermissionsBitField.Flags.CreateInstantInvite);
 	}
 
-	private isInviteCompatibleChannel(channel: GuildBasedChannel): boolean {
-		return channel.type === ChannelType.GuildText;
+	private isInviteCompatibleChannel(channel: unknown): channel is TextChannel {
+		if (!channel || typeof channel !== 'object') {
+			return false;
+		}
+
+		const guildChannel = channel as TextChannel;
+
+		return guildChannel.type === ChannelType.GuildText;
 	}
 }

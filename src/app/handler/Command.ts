@@ -1,6 +1,11 @@
-import type { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
+import type { InteractionContextPort } from '../port/interaction/InteractionContextPort.ts';
+
+export type CommandData = {
+	name: string;
+	toJSON(): unknown;
+};
 
 export interface Command {
-	data: SlashCommandBuilder;
-	execute(interaction: ChatInputCommandInteraction): Promise<void>;
+	data: CommandData;
+	execute(interaction: InteractionContextPort): Promise<void>;
 }

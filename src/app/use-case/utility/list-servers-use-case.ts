@@ -1,6 +1,7 @@
-import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder } from 'discord.js';
 
 import type { CommandDependencies } from '../../port/CommandDependencies.ts';
+import type { InteractionContextPort } from '../../port/interaction/InteractionContextPort.ts';
 import { ensureAdminPermission, ensureGuildInteraction } from '../shared/command-guards.ts';
 
 export default class ListServersUseCase {
@@ -8,9 +9,9 @@ export default class ListServersUseCase {
 		.setName('listservers')
 		.setDescription('Lista os servidores em que o bot está com índice para configuração.');
 
-	constructor(private readonly dependencies: CommandDependencies) {}
+	constructor(private readonly dependencies?: CommandDependencies) {}
 
-	async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+	async execute(interaction: InteractionContextPort): Promise<void> {
 		if (!(await ensureGuildInteraction(interaction))) {
 			return;
 		}
@@ -18,7 +19,7 @@ export default class ListServersUseCase {
 			return;
 		}
 
-		const botGuilds = await this.dependencies.discordGateway.listBotGuilds();
+		const botGuilds = await this.getDependencies().discordGateway.listBotGuilds();
 		const guildLines = botGuilds.map((guild, index) => `${index + 1} - ${guild.name}`);
 		const content = guildLines.length > 0
 			? [
@@ -30,7 +31,14 @@ export default class ListServersUseCase {
 
 		await interaction.reply({
 			content,
-			flags: MessageFlags.Ephemeral,
+			ephemeral: true,
 		});
+	}
+
+	private getDependencies(): CommandDependencies {
+		if (!this.dependencies) {
+			throw new Error('Dependências do comando não foram fornecidas.');
+		}
+		return this.dependencies;
 	}
 }

@@ -1,14 +1,11 @@
 import 'dotenv/config';
-import path from 'node:path';
 
 import { REST, Routes } from 'discord.js';
 import { clientId, guildId, token } from '../../../config.ts';
-import { loadCommandsFromDirectory } from '../bootstrap/command-loader.ts';
+import { listAllCommands } from '../bootstrap/command-registry.ts';
 
 async function main() {
-	const utilityPath = path.join(process.cwd(), 'src', 'app', 'use-case', 'utility');
-	const loadedCommands = await loadCommandsFromDirectory(utilityPath);
-	const commands = loadedCommands.map(({ command }) => command.data.toJSON());
+	const commands = listAllCommands().map((command) => command.data.toJSON());
 	const rest = new REST().setToken(token);
 
 	try {

@@ -1,6 +1,7 @@
-import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder } from 'discord.js';
 
 import type { CommandDependencies } from '../../port/CommandDependencies.ts';
+import type { InteractionContextPort } from '../../port/interaction/InteractionContextPort.ts';
 import { ensureAdminPermission, ensureGuildInteraction } from '../shared/command-guards.ts';
 
 export default class ConfigUseCase {
@@ -15,9 +16,9 @@ export default class ConfigUseCase {
 				.setMinValue(1),
 		);
 
-	constructor(private readonly dependencies: CommandDependencies) {}
+	constructor(private readonly dependencies?: CommandDependencies) {}
 
-	async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+	async execute(interaction: InteractionContextPort): Promise<void> {
 		if (!(await ensureGuildInteraction(interaction))) {
 			return;
 		}
@@ -25,36 +26,51 @@ export default class ConfigUseCase {
 			return;
 		}
 
-		const selectedIndex = interaction.options.getInteger('index', true);
-		const botGuilds = await this.dependencies.discordGateway.listBotGuilds();
+		const selectedIndex = interaction.getIntegerOption('index');
+
+		if (!selectedIndex || selectedIndex < 1) {
+			await interaction.reply({
+				content: 'Índice inválido. Informe um número maior ou igual a 1.',
+				ephemeral: true,
+			});
+			return;
+		}
+		const botGuilds = await this.getDependencies().discordGateway.listBotGuilds();
 
 		if (selectedIndex > botGuilds.length) {
 			await interaction.reply({
 				content: `Índice inválido. Execute /listServers e use um índice entre 1 e ${botGuilds.length}.`,
-				flags: MessageFlags.Ephemeral,
+				ephemeral: true,
 			});
 			return;
 		}
 
 		const targetGuild = botGuilds[selectedIndex - 1];
-		const originGuildId = interaction.guildId;
+		const originGuildId = interaction.getGuildId();
 
 		if (!originGuildId) {
 			await interaction.reply({
 				content: 'Não foi possível identificar o servidor de origem.',
-				flags: MessageFlags.Ephemeral,
+				ephemeral: true,
 			});
 			return;
 		}
 
-		await this.dependencies.inviteTargetConfigRepository.setTargetGuildId(
+		await this.getDependencies().inviteTargetConfigRepository.setTargetGuildId(
 			originGuildId,
 			targetGuild.id,
 		);
 
 		await interaction.reply({
 			content: `Configuração salva. O /invite agora gera convite para: ${targetGuild.name}.`,
-			flags: MessageFlags.Ephemeral,
+			ephemeral: true,
 		});
+	}
+
+	private getDependencies(): CommandDependencies {
+		if (!this.dependencies) {
+			throw new Error('Dependências do comando não foram fornecidas.');
+		}
+		return this.dependencies;
 	}
 }
