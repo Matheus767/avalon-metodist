@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "nodemon --watch src --watch config.ts --ext ts --exec tsx src/index.ts",
     "deploy-commands": "tsx src/infra/discord/deploy-commands.ts",
-    "worker:dev": "wrangler dev src/worker/index.ts",
-    "worker:deploy": "wrangler deploy src/worker/index.ts",
+    "worker:dev": "wrangler dev",
+    "worker:deploy": "wrangler deploy",
     "worker:register": "tsx src/worker/register-commands.ts",
     "worker:logs": "clear && wrangler tail"
   },

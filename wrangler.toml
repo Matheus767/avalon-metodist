@@ -1,0 +1,7 @@
+name = "avalon-metodist"
+main = "src/worker/index.ts"
+compatibility_date = "2026-05-26"
+
+[[kv_namespaces]]
+binding = "INVITE_CONFIG_KV"
+id = "2f96a01697394e3f9c3dd45179e365e9"
