@@ -1,12 +1,18 @@
+<<<<<<< Updated upstream
 import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js';
 
+=======
+import { createCommandData } from '../../handler/command-data.ts';
+>>>>>>> Stashed changes
 import type { CommandDependencies } from '../../port/CommandDependencies.ts';
 import { ensureGuildInteraction } from '../shared/command-guards.ts';
 
 export default class InviteUseCase {
-	data = new SlashCommandBuilder()
-		.setName('invite')
-		.setDescription('Gera um convite para o servidor configurado previamente.');
+	data = createCommandData({
+		name: 'invite',
+		description: 'Gera um convite para o servidor configurado previamente.',
+		type: 1,
+	});
 
 	constructor(private readonly dependencies: CommandDependencies) {}
 

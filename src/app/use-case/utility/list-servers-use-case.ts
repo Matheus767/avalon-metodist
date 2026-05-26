@@ -1,12 +1,18 @@
+<<<<<<< Updated upstream
 import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js';
 
+=======
+import { createCommandData } from '../../handler/command-data.ts';
+>>>>>>> Stashed changes
 import type { CommandDependencies } from '../../port/CommandDependencies.ts';
 import { ensureAdminPermission, ensureGuildInteraction } from '../shared/command-guards.ts';
 
 export default class ListServersUseCase {
-	data = new SlashCommandBuilder()
-		.setName('listservers')
-		.setDescription('Lista os servidores em que o bot está com índice para configuração.');
+	data = createCommandData({
+		name: 'listservers',
+		description: 'Lista os servidores em que o bot está com índice para configuração.',
+		type: 1,
+	});
 
 	constructor(private readonly dependencies: CommandDependencies) {}
 

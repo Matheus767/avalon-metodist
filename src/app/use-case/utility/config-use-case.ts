@@ -1,19 +1,27 @@
+<<<<<<< Updated upstream
 import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js';
 
+=======
+import { createCommandData } from '../../handler/command-data.ts';
+>>>>>>> Stashed changes
 import type { CommandDependencies } from '../../port/CommandDependencies.ts';
 import { ensureAdminPermission, ensureGuildInteraction } from '../shared/command-guards.ts';
 
 export default class ConfigUseCase {
-	data = new SlashCommandBuilder()
-		.setName('config')
-		.setDescription('Configura em qual servidor o /invite vai gerar convite.')
-		.addIntegerOption((option) =>
-			option
-				.setName('index')
-				.setDescription('Índice do servidor retornado em /listServers')
-				.setRequired(true)
-				.setMinValue(1),
-		);
+	data = createCommandData({
+		name: 'config',
+		description: 'Configura em qual servidor o /invite vai gerar convite.',
+		type: 1,
+		options: [
+			{
+				name: 'index',
+				description: 'Índice do servidor retornado em /listServers',
+				type: 4,
+				required: true,
+				min_value: 1,
+			},
+		],
+	});
 
 	constructor(private readonly dependencies: CommandDependencies) {}
 
